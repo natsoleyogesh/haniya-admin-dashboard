@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DashboardPage from './pages/DashboardPage';
-import ManageCustomersPage from './pages/ManageCustomersPage';
-import CreateCustomerPage from './pages/CreateCustomerPage';
+import ManageEmployeesPage from './pages/ManageEmployeesPage';
+import AddEmployeePage from './pages/AddEmployeePage';
+import EditEmployeePage from './pages/EditEmployeePage';
 import ManageCategoriesPage from './pages/ManageCategoriesPage';
 import AddCategoryPage from './pages/AddCategoryPage';
 import ManageProductsPage from './pages/ManageProductsPage';
@@ -19,8 +20,9 @@ const DashboardLayout: React.FC = () => {
     const renderPage = () => {
         switch (activePage) {
             case 'dashboard': return <DashboardPage />;
-            case 'manage-customers': return <ManageCustomersPage />;
-            case 'create-customer': return <CreateCustomerPage />;
+            case 'manage-employees': return <ManageEmployeesPage setActivePage={setActivePage}/>;
+            case 'add-employee': return <AddEmployeePage setActivePage={setActivePage}/>;
+            case 'edit-employee': return <EditEmployeePage setActivePage={setActivePage}/>;
             case 'manage-categories': return <ManageCategoriesPage setActivePage={setActivePage}/>;
             case 'add-category': return <AddCategoryPage setActivePage={setActivePage}/>;
             case 'edit-category': return <EditCategoryPage setActivePage={setActivePage}/>;
