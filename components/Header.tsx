@@ -39,7 +39,7 @@ const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
             {/* This div is a spacer to keep the right-side items aligned when the hamburger icon is hidden on large screens */}
             <div className="hidden lg:block w-6"></div>
             <div className="flex items-center space-x-4">
-                <button onClick={toggleTheme} className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                <button onClick={toggleTheme} className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700">
                     {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
                 </button>
                 <div className="relative">
@@ -47,7 +47,7 @@ const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
                         <UserCircleIcon className="w-8 h-8 text-slate-500" />
                         <span className="hidden md:inline text-sm font-medium">Admin</span>
                     </button>
-                    <div className={`absolute right-0 mt-2 w-48 bg-white dark:bg-slate-700 rounded-md shadow-lg py-1 z-20 transition-all duration-200 ease-out ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                    <div className={`absolute right-0 mt-2 w-48 bg-white dark:bg-slate-700 rounded-md shadow-lg py-1 z-20 transition-all duration-200 ease-out origin-top-right ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                         <a href="#" onClick={(e) => { e.preventDefault(); logout(); }} className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600">
                             Logout
                         </a>

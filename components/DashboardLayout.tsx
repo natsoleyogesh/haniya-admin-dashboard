@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DashboardPage from './pages/DashboardPage';
@@ -16,6 +16,13 @@ import ProfilePage from './pages/ProfilePage';
 const DashboardLayout: React.FC = () => {
     const [activePage, setActivePage] = useState('dashboard');
     const [isSidebarOpen, setSidebarOpen] = useState(false);
+
+    // Close sidebar on route change on mobile
+    useEffect(() => {
+        if (window.innerWidth < 1024) {
+            setSidebarOpen(false);
+        }
+    }, [activePage]);
 
     const renderPage = () => {
         const props = { setActivePage };
@@ -42,7 +49,6 @@ const DashboardLayout: React.FC = () => {
                 return <EditEmployeePage {...props} />;
             case 'profile':
                 return <ProfilePage />;
-            // Removed customer pages as they are replaced by employee module
             default:
                 return <DashboardPage />;
         }
@@ -59,7 +65,7 @@ const DashboardLayout: React.FC = () => {
             <div className="flex-1 flex flex-col transition-all duration-300 lg:ml-64">
                 <Header toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-                    <div className="animate-fade-in">
+                    <div key={activePage} className="animate-fade-in">
                         {renderPage()}
                     </div>
                 </main>

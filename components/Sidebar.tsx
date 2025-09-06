@@ -24,10 +24,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, setActivePage, isOpen, se
     
     const handleNavigation = (page: string) => {
         setActivePage(page);
-        // Close sidebar on navigation in mobile view
-        if (window.innerWidth < 1024) {
-            setIsOpen(false);
-        }
     };
 
     return (
