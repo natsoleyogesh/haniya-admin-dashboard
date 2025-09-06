@@ -37,15 +37,15 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-xl dark:bg-gray-800">
+    <div className="flex items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">Haniya</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Admin Dashboard Login</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Admin Dashboard Login</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="rounded-md -space-y-px">
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>
               <input
@@ -54,7 +54,7 @@ const LoginPage: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="relative block w-full px-3 py-3 text-gray-900 placeholder-gray-500 bg-gray-50 border border-gray-300 rounded-t-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="relative block w-full px-3 py-3 text-slate-900 placeholder-slate-500 bg-slate-50 border border-slate-300 rounded-t-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white transition-all"
                 placeholder="Email address"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -68,7 +68,7 @@ const LoginPage: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
-                className="relative block w-full px-3 py-3 text-gray-900 placeholder-gray-500 bg-gray-50 border border-gray-300 rounded-b-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="relative block w-full px-3 py-3 text-slate-900 placeholder-slate-500 bg-slate-50 border border-slate-300 rounded-b-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white transition-all"
                 placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -76,7 +76,7 @@ const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               >
                 {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
               </button>
@@ -87,7 +87,7 @@ const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-all transform hover:scale-105"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>

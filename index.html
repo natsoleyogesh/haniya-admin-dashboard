@@ -1,29 +1,52 @@
 <!DOCTYPE html>
-<html lang="en" class="">
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Haniya Admin Dashboard</title>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      tailwind.config = {
-        darkMode: 'class',
-      }
+        tailwind.config = {
+            darkMode: 'class',
+        }
     </script>
-    
-    <!-- FOUC Prevention Script -->
     <script>
-      // On page load or when changing themes, best to add inline in `head` to avoid FOUC
-      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+        // Prevents flash of incorrect theme
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
     </script>
-    
-    <!-- Import Map -->
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+             background: #475569;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+         .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900">
+    <div id="root"></div>
     <script type="importmap">
 {
   "imports": {
@@ -34,9 +57,6 @@
   }
 }
 </script>
-</head>
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
-    <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>
