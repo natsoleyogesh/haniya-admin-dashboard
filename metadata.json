@@ -1,0 +1,5 @@
+{
+  "name": "Haniya Admin Dashboard",
+  "description": "An admin dashboard for managing customers, categories, and products. It features a login system and a clean, modern interface for easy data management.",
+  "requestFramePermissions": []
+}
