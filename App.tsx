@@ -2,8 +2,10 @@ import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ToastProvider } from './contexts/ToastContext';
 import LoginPage from './components/LoginPage';
 import DashboardLayout from './components/DashboardLayout';
+import ToastContainer from './components/ToastContainer';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -13,11 +15,14 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <DataProvider>
-          <AppContent />
-        </DataProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <DataProvider>
+            <AppContent />
+            <ToastContainer />
+          </DataProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 };
