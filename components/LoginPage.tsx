@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -17,8 +18,8 @@ const EyeSlashIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('admin@haniya.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('admin@example.com');
+  const [password, setPassword] = useState('123456');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();

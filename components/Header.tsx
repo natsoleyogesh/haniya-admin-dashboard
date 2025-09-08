@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -27,7 +28,7 @@ const MenuIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const [isDropdownOpen, setDropdownOpen] = React.useState(false);
 
@@ -45,7 +46,7 @@ const Header: React.FC<{ toggleSidebar: () => void }> = ({ toggleSidebar }) => {
                 <div className="relative">
                     <button onClick={() => setDropdownOpen(!isDropdownOpen)} onBlur={() => setTimeout(() => setDropdownOpen(false), 150)} className="flex items-center space-x-2">
                         <UserCircleIcon className="w-8 h-8 text-slate-500" />
-                        <span className="hidden md:inline text-sm font-medium">Admin</span>
+                        <span className="hidden md:inline text-sm font-medium">{user?.name || 'Admin'}</span>
                     </button>
                     <div className={`absolute right-0 mt-2 w-48 bg-white dark:bg-slate-700 rounded-md shadow-lg py-1 z-20 transition-all duration-200 ease-out origin-top-right ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                         <a href="#" onClick={(e) => { e.preventDefault(); logout(); }} className="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600">
