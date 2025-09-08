@@ -11,6 +11,7 @@ const EditCategoryPage: React.FC<EditCategoryPageProps> = ({ setActivePage }) =>
     
     const [name, setName] = useState('');
     const [status, setStatus] = useState<Status>(Status.Active);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (editingCategory) {
@@ -21,12 +22,19 @@ const EditCategoryPage: React.FC<EditCategoryPageProps> = ({ setActivePage }) =>
         }
     }, [editingCategory, setActivePage]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !editingCategory) return;
-        updateCategory({ ...editingCategory, name, status });
-        setEditingCategory(null);
-        setActivePage('manage-categories');
+        setIsSaving(true);
+        try {
+            await updateCategory({ ...editingCategory, name, status });
+            setEditingCategory(null);
+            setActivePage('manage-categories');
+        } catch (error) {
+            // Error toast is handled in DataContext
+        } finally {
+            setIsSaving(false);
+        }
     };
     
     const handleCancel = () => {
@@ -69,8 +77,11 @@ const EditCategoryPage: React.FC<EditCategoryPageProps> = ({ setActivePage }) =>
                      <button type="button" onClick={handleCancel} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 focus:outline-none">
                         Cancel
                     </button>
-                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Update Category
+                    <button 
+                        type="submit" 
+                        disabled={isSaving}
+                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed">
+                        {isSaving ? 'Updating...' : 'Update Category'}
                     </button>
                 </div>
             </form>

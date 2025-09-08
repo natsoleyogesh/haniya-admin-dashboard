@@ -11,7 +11,7 @@ interface ManageCategoriesPageProps {
 const ITEMS_PER_PAGE = 5;
 
 const ManageCategoriesPage: React.FC<ManageCategoriesPageProps> = ({ setActivePage }) => {
-    const { categories, setEditingCategory, deleteCategory } = useData();
+    const { categories, setEditingCategory, deleteCategory, isLoadingCategories } = useData();
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
@@ -78,34 +78,43 @@ const ManageCategoriesPage: React.FC<ManageCategoriesPageProps> = ({ setActivePa
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                            {currentCategories.map((category, index) => (
-                                <tr key={category.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{indexOfFirstItem + index + 1}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">{category.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                            category.status === Status.Active 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                        }`}>
-                                            {category.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                                        <button onClick={() => handleEdit(category)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
-                                            Edit
-                                        </button>
-                                        <button onClick={() => openDeleteModal(category)} className="ml-4 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 font-medium transition-colors">
-                                            Delete
-                                        </button>
-                                    </td>
+                            {isLoadingCategories ? (
+                                <tr>
+                                    <td colSpan={4} className="p-6 text-center text-slate-500 dark:text-slate-400">Loading categories...</td>
                                 </tr>
-                            ))}
+                            ) : currentCategories.length > 0 ? (
+                                currentCategories.map((category, index) => (
+                                    <tr key={category.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{indexOfFirstItem + index + 1}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">{category.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                category.status === Status.Active 
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                            }`}>
+                                                {category.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                                            <button onClick={() => handleEdit(category)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
+                                                Edit
+                                            </button>
+                                            <button onClick={() => openDeleteModal(category)} className="ml-4 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 font-medium transition-colors">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={4} className="p-6 text-center text-slate-500 dark:text-slate-400">No categories found.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
-                 {categories.length === 0 && <p className="p-6 text-center text-slate-500 dark:text-slate-400">No categories found.</p>}
-                 {categories.length > 0 && (
+                 {!isLoadingCategories && categories.length > ITEMS_PER_PAGE && (
                     <Pagination
                         currentPage={currentPage}
                         totalItems={categories.length}
