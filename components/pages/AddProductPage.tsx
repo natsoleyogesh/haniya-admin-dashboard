@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { Status } from '../../types';
@@ -12,15 +11,23 @@ const AddProductPage: React.FC<AddProductPageProps> = ({ setActivePage }) => {
     const [name, setName] = useState('');
     const [categoryId, setCategoryId] = useState(categories.length > 0 ? categories[0].id : '');
     const [status, setStatus] = useState<Status>(Status.Active);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !categoryId) {
             alert("Please fill out all fields.");
             return;
         }
-        addProduct({ name, categoryId, status });
-        setActivePage('manage-products');
+        setIsSaving(true);
+        try {
+            await addProduct({ name, categoryId, status });
+            setActivePage('manage-products');
+        } catch (error) {
+            // Error is handled by context toast
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -78,8 +85,11 @@ const AddProductPage: React.FC<AddProductPageProps> = ({ setActivePage }) => {
                         <button type="button" onClick={() => setActivePage('manage-products')} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 focus:outline-none">
                             Cancel
                         </button>
-                        <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Save Product
+                        <button 
+                            type="submit"
+                            disabled={isSaving} 
+                            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed">
+                            {isSaving ? 'Saving...' : 'Save Product'}
                         </button>
                     </div>
                 </form>

@@ -11,7 +11,7 @@ interface ManageProductsPageProps {
 const ITEMS_PER_PAGE = 5;
 
 const ManageProductsPage: React.FC<ManageProductsPageProps> = ({ setActivePage }) => {
-    const { products, categories, setEditingProduct, deleteProduct } = useData();
+    const { products, categories, setEditingProduct, deleteProduct, isLoadingProducts } = useData();
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -83,35 +83,44 @@ const ManageProductsPage: React.FC<ManageProductsPageProps> = ({ setActivePage }
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                            {currentProducts.map((product, index) => (
-                                <tr key={product.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{indexOfFirstItem + index + 1}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">{product.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{getCategoryName(product.categoryId)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                            product.status === Status.Active 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                        }`}>
-                                            {product.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                                        <button onClick={() => handleEdit(product)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
-                                            Edit
-                                        </button>
-                                        <button onClick={() => openDeleteModal(product)} className="ml-4 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 font-medium transition-colors">
-                                            Delete
-                                        </button>
-                                    </td>
+                            {isLoadingProducts ? (
+                                <tr>
+                                    <td colSpan={5} className="p-6 text-center text-slate-500 dark:text-slate-400">Loading products...</td>
                                 </tr>
-                            ))}
+                            ) : currentProducts.length > 0 ? (
+                                currentProducts.map((product, index) => (
+                                    <tr key={product.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{indexOfFirstItem + index + 1}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">{product.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{getCategoryName(product.categoryId)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                product.status === Status.Active 
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                            }`}>
+                                                {product.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                                            <button onClick={() => handleEdit(product)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
+                                                Edit
+                                            </button>
+                                            <button onClick={() => openDeleteModal(product)} className="ml-4 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 font-medium transition-colors">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={5} className="p-6 text-center text-slate-500 dark:text-slate-400">No products found.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
-                 {products.length === 0 && <p className="p-6 text-center text-slate-500 dark:text-slate-400">No products found.</p>}
-                 {products.length > 0 && (
+                 {!isLoadingProducts && products.length > ITEMS_PER_PAGE && (
                     <Pagination
                         currentPage={currentPage}
                         totalItems={products.length}

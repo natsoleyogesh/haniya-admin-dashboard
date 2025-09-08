@@ -7,13 +7,13 @@ interface DataContextType {
   products: Product[];
   employees: Employee[];
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
-  addProduct: (product: Omit<Product, 'id'>) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   addEmployee: (employee: Omit<Employee, 'id'>) => void;
   updateCategory: (category: Category) => Promise<void>;
-  updateProduct: (product: Product) => void;
+  updateProduct: (product: Product) => Promise<void>;
   updateEmployee: (employee: Employee) => void;
   deleteCategory: (categoryId: string) => Promise<void>;
-  deleteProduct: (productId: string) => void;
+  deleteProduct: (productId: string) => Promise<void>;
   deleteEmployee: (employeeId: string) => void;
   editingCategory: Category | null;
   setEditingCategory: (category: Category | null) => void;
@@ -22,15 +22,10 @@ interface DataContextType {
   editingEmployee: Employee | null;
   setEditingEmployee: (employee: Employee | null) => void;
   isLoadingCategories: boolean;
+  isLoadingProducts: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
-
-const initialProducts: Product[] = [
-    { id: '101', name: 'Laptop Pro', categoryId: '1', status: Status.Active },
-    { id: '102', name: 'Wireless Mouse', categoryId: '1', status: Status.Active },
-    { id: '103', name: 'React for Beginners', categoryId: '2', status: Status.Active },
-];
 
 const initialEmployees: Employee[] = [
     { id: 'e1', name: 'John Doe', email: 'john.d@example.com', mobile: '123-456-7890', salary: 50000, password: 'password123', monthlyAttendance: 28, monthlyAdvance: 5000 },
@@ -39,13 +34,14 @@ const initialEmployees: Employee[] = [
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { addToast } = useToast();
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   const API_BASE_URL = 'https://haniya.natsol.in/api/admin';
   const getAuthToken = () => localStorage.getItem('authToken');
@@ -82,9 +78,43 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [addToast]);
 
+  const fetchProducts = useCallback(async () => {
+    setIsLoadingProducts(true);
+    const token = getAuthToken();
+    if (!token) {
+      addToast('Authentication session expired. Please log in again.', 'error');
+      setIsLoadingProducts(false);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/items`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch products. Server responded with an error.');
+      
+      const data = await response.json();
+      if (data.status === true) {
+        const mappedProducts: Product[] = data.data.map((prod: any) => ({
+          id: prod.id.toString(),
+          name: prod.name,
+          categoryId: prod.cat_id.toString(),
+          status: prod.status === 'Active' ? Status.Active : Status.Inactive,
+        }));
+        setProducts(mappedProducts);
+      } else {
+        throw new Error(data.message || 'An unknown error occurred while fetching products.');
+      }
+    } catch (error: any) {
+      addToast(error.message, 'error');
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  }, [addToast]);
+
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+    fetchProducts();
+  }, [fetchCategories, fetchProducts]);
 
 
   const addCategory = async (category: Omit<Category, 'id'>) => {
@@ -151,17 +181,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (data.status !== true) throw new Error(data.message || 'Failed to delete category');
 
         addToast('Category deleted successfully!', 'success');
-        setCategories(prev => prev.filter(cat => cat.id !== categoryId)); // Optimistic UI update
+        await fetchCategories();
     } catch (error: any) {
         addToast(error.message, 'error');
         throw error;
     }
   };
   
-  const addProduct = (product: Omit<Product, 'id'>) => {
-    const newProduct = { ...product, id: new Date().toISOString() };
-    setProducts(prev => [...prev, newProduct]);
-    addToast('Product added successfully!', 'success');
+  const addProduct = async (product: Omit<Product, 'id'>) => {
+    const token = getAuthToken();
+    const formData = new FormData();
+    formData.append('name', product.name);
+    formData.append('cat_id', product.categoryId);
+    formData.append('status', product.status === Status.Active ? 'Active' : 'DeActive');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/items`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData,
+        });
+        const data = await response.json();
+        if (data.status !== true) throw new Error(data.message || 'Failed to add product');
+        
+        addToast('Product added successfully!', 'success');
+        await fetchProducts();
+    } catch (error: any) {
+        addToast(error.message, 'error');
+        throw error;
+    }
   };
   
   const addEmployee = (employee: Omit<Employee, 'id'>) => {
@@ -170,9 +218,29 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     addToast('Employee added successfully!', 'success');
   };
 
-  const updateProduct = (updatedProduct: Product) => {
-    setProducts(prev => prev.map(prod => (prod.id === updatedProduct.id ? updatedProduct : prod)));
-     addToast('Product updated successfully!', 'success');
+  const updateProduct = async (updatedProduct: Product) => {
+    const token = getAuthToken();
+    const formData = new FormData();
+    formData.append('name', updatedProduct.name);
+    formData.append('cat_id', updatedProduct.categoryId);
+    formData.append('status', updatedProduct.status === Status.Active ? 'Active' : 'DeActive');
+    formData.append('_method', 'PUT');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/items/${updatedProduct.id}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData,
+        });
+        const data = await response.json();
+        if (data.status !== true) throw new Error(data.message || 'Failed to update product');
+        
+        addToast('Product updated successfully!', 'success');
+        await fetchProducts();
+    } catch (error: any) {
+        addToast(error.message, 'error');
+        throw error;
+    }
   };
 
   const updateEmployee = (updatedEmployee: Employee) => {
@@ -180,9 +248,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     addToast('Employee updated successfully!', 'success');
   };
 
-  const deleteProduct = (productId: string) => {
-    setProducts(prev => prev.filter(prod => prod.id !== productId));
-    addToast('Product deleted successfully!', 'success');
+  const deleteProduct = async (productId: string) => {
+    const token = getAuthToken();
+    try {
+        const response = await fetch(`${API_BASE_URL}/items/${productId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.status !== true) throw new Error(data.message || 'Failed to delete product');
+
+        addToast('Product deleted successfully!', 'success');
+        await fetchProducts();
+    } catch (error: any) {
+        addToast(error.message, 'error');
+        throw error;
+    }
   };
   
   const deleteEmployee = (employeeId: string) => {
@@ -211,6 +292,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         editingEmployee,
         setEditingEmployee,
         isLoadingCategories,
+        isLoadingProducts,
     }}>
       {children}
     </DataContext.Provider>
