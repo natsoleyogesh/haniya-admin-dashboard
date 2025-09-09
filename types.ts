@@ -26,10 +26,23 @@ export interface Employee {
     status: Status;
 }
 
+// For POSTing a new salary
 export interface EmployeeSalary {
     employee_id: string;
     sal_date: string; // "YYYY-MM-DD"
     advance: number;
     others: number;
     note: string;
+}
+
+// For GETting salary history
+export interface EmployeeSalaryRecord {
+    id: number;
+    employee_id: number;
+    sal_date: string; // ISO date string
+    advance: string;
+    others: string;
+    netamount: string;
+    note: string;
+    employee: Employee;
 }

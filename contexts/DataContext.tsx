@@ -1,11 +1,12 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
-import { Category, Product, Status, Employee, EmployeeSalary } from '../types';
+import { Category, Product, Status, Employee, EmployeeSalary, EmployeeSalaryRecord } from '../types';
 import { useToast } from './ToastContext';
 
 interface DataContextType {
   categories: Category[];
   products: Product[];
   employees: Employee[];
+  employeeSalaries: EmployeeSalaryRecord[];
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   addEmployee: (employee: Omit<Employee, 'id'> & { password: string }) => Promise<void>;
@@ -16,15 +17,19 @@ interface DataContextType {
   deleteCategory: (categoryId: string) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   deleteEmployee: (employeeId: string) => Promise<void>;
+  fetchEmployeeSalaries: (employeeId: string) => Promise<void>;
   editingCategory: Category | null;
   setEditingCategory: (category: Category | null) => void;
   editingProduct: Product | null;
   setEditingProduct: (product: Product | null) => void;
   editingEmployee: Employee | null;
   setEditingEmployee: (employee: Employee | null) => void;
+  employeeForSalary: Employee | null;
+  setEmployeeForSalary: (employee: Employee | null) => void;
   isLoadingCategories: boolean;
   isLoadingProducts: boolean;
   isLoadingEmployees: boolean;
+  isLoadingEmployeeSalaries: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -33,13 +38,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeeSalaries, setEmployeeSalaries] = useState<EmployeeSalaryRecord[]>([]);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [employeeForSalary, setEmployeeForSalary] = useState<Employee | null>(null);
   const { addToast } = useToast();
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
+  const [isLoadingEmployeeSalaries, setIsLoadingEmployeeSalaries] = useState(true);
 
   const API_BASE_URL = 'https://haniya.natsol.in/api/admin';
   const getAuthToken = () => localStorage.getItem('authToken');
@@ -143,6 +151,34 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoadingEmployees(false);
     }
   }, [addToast]);
+
+  const fetchEmployeeSalaries = async (employeeId: string) => {
+    setIsLoadingEmployeeSalaries(true);
+    const token = getAuthToken();
+     if (!token) {
+      addToast('Authentication session expired. Please log in again.', 'error');
+      setIsLoadingEmployeeSalaries(false);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/employees/employee/${employeeId}/salaries`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch employee salaries.');
+      const data = await response.json();
+      if (data.status === true) {
+        setEmployeeSalaries(data.data);
+      } else {
+         setEmployeeSalaries([]);
+         throw new Error(data.message || 'Could not fetch salaries.');
+      }
+    } catch (error: any) {
+      setEmployeeSalaries([]);
+      addToast(error.message, 'error');
+    } finally {
+      setIsLoadingEmployeeSalaries(false);
+    }
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -394,6 +430,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         categories, 
         products, 
         employees,
+        employeeSalaries,
         addCategory, 
         addProduct, 
         addEmployee,
@@ -404,15 +441,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         deleteCategory,
         deleteProduct,
         deleteEmployee,
+        fetchEmployeeSalaries,
         editingCategory,
         setEditingCategory,
         editingProduct,
         setEditingProduct,
         editingEmployee,
         setEditingEmployee,
+        employeeForSalary,
+        setEmployeeForSalary,
         isLoadingCategories,
         isLoadingProducts,
         isLoadingEmployees,
+        isLoadingEmployeeSalaries,
     }}>
       {children}
     </DataContext.Provider>

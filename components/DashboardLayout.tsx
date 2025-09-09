@@ -11,6 +11,8 @@ import EditProductPage from './pages/EditProductPage';
 import ManageEmployeesPage from './pages/ManageEmployeesPage';
 import AddEmployeePage from './pages/AddEmployeePage';
 import EditEmployeePage from './pages/EditEmployeePage';
+import AddSalaryPage from './pages/AddSalaryPage';
+import ViewEmployeeSalariesPage from './pages/ViewEmployeeSalariesPage';
 import ProfilePage from './pages/ProfilePage';
 
 const DashboardLayout: React.FC = () => {
@@ -47,6 +49,10 @@ const DashboardLayout: React.FC = () => {
                 return <AddEmployeePage {...props} />;
             case 'edit-employee':
                 return <EditEmployeePage {...props} />;
+            case 'add-salary':
+                return <AddSalaryPage {...props} />;
+            case 'view-employee-salaries':
+                return <ViewEmployeeSalariesPage {...props} />;
             case 'profile':
                 return <ProfilePage />;
             default:
