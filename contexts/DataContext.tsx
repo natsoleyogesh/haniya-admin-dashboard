@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
-import { Category, Product, Status, Employee } from '../types';
+import { Category, Product, Status, Employee, EmployeeSalary } from '../types';
 import { useToast } from './ToastContext';
 
 interface DataContextType {
@@ -9,6 +9,7 @@ interface DataContextType {
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   addEmployee: (employee: Omit<Employee, 'id'> & { password: string }) => Promise<void>;
+  addEmployeeSalary: (salaryData: EmployeeSalary) => Promise<void>;
   updateCategory: (category: Category) => Promise<void>;
   updateProduct: (product: Product) => Promise<void>;
   updateEmployee: (employee: Employee) => Promise<void>;
@@ -272,6 +273,31 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const addEmployeeSalary = async (salaryData: EmployeeSalary) => {
+    const token = getAuthToken();
+    const formData = new FormData();
+    formData.append('employee_id', salaryData.employee_id);
+    formData.append('sal_date', salaryData.sal_date);
+    formData.append('advance', salaryData.advance.toString());
+    formData.append('others', salaryData.others.toString());
+    formData.append('note', salaryData.note);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/employees/salaries`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData,
+        });
+        const data = await response.json();
+        if (data.status !== true) throw new Error(data.message || 'Failed to add salary record');
+        
+        addToast('Salary record added successfully!', 'success');
+    } catch (error: any) {
+        addToast(error.message, 'error');
+        throw error;
+    }
+  };
+
   const updateProduct = async (updatedProduct: Product) => {
     const token = getAuthToken();
     const formData = new FormData();
@@ -371,6 +397,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         addCategory, 
         addProduct, 
         addEmployee,
+        addEmployeeSalary,
         updateCategory, 
         updateProduct,
         updateEmployee,

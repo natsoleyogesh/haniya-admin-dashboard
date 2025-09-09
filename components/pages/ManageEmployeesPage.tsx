@@ -3,6 +3,7 @@ import { useData } from '../../contexts/DataContext';
 import { Employee, Status } from '../../types';
 import Pagination from '../Pagination';
 import ConfirmModal from '../ConfirmModal';
+import AddSalaryModal from '../AddSalaryModal';
 
 interface ManageEmployeesPageProps {
     setActivePage: (page: string) => void;
@@ -13,8 +14,9 @@ const ITEMS_PER_PAGE = 5;
 const ManageEmployeesPage: React.FC<ManageEmployeesPageProps> = ({ setActivePage }) => {
     const { employees, setEditingEmployee, deleteEmployee, isLoadingEmployees } = useData();
     const [currentPage, setCurrentPage] = useState(1);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
+    const [employeeToProcess, setEmployeeToProcess] = useState<Employee | null>(null);
 
     const handleEdit = (employee: Employee) => {
         setEditingEmployee(employee);
@@ -22,18 +24,27 @@ const ManageEmployeesPage: React.FC<ManageEmployeesPageProps> = ({ setActivePage
     };
 
     const openDeleteModal = (employee: Employee) => {
-        setEmployeeToDelete(employee);
-        setIsModalOpen(true);
+        setEmployeeToProcess(employee);
+        setIsDeleteModalOpen(true);
     };
 
     const closeDeleteModal = () => {
-        setEmployeeToDelete(null);
-        setIsModalOpen(false);
+        setEmployeeToProcess(null);
+        setIsDeleteModalOpen(false);
+    };
+
+    const openSalaryModal = (employee: Employee) => {
+        setEmployeeToProcess(employee);
+        setIsSalaryModalOpen(true);
+    };
+
+    const closeSalaryModal = () => {
+        setIsSalaryModalOpen(false);
     };
 
     const confirmDelete = async () => {
-        if (employeeToDelete) {
-            await deleteEmployee(employeeToDelete.id);
+        if (employeeToProcess) {
+            await deleteEmployee(employeeToProcess.id);
             if (currentEmployees.length === 1 && currentPage > 1) {
                 setCurrentPage(currentPage - 1);
             }
@@ -55,12 +66,17 @@ const ManageEmployeesPage: React.FC<ManageEmployeesPageProps> = ({ setActivePage
 
     return (
         <div>
-             <ConfirmModal
-                isOpen={isModalOpen}
+            <AddSalaryModal
+                isOpen={isSalaryModalOpen}
+                onClose={closeSalaryModal}
+                employee={employeeToProcess}
+            />
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
                 onClose={closeDeleteModal}
                 onConfirm={confirmDelete}
                 title="Delete Employee"
-                message={`Are you sure you want to delete the employee "${employeeToDelete?.name}"? This action cannot be undone.`}
+                message={`Are you sure you want to delete the employee "${employeeToProcess?.name}"? This action cannot be undone.`}
             />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-semibold text-slate-800 dark:text-white">Manage Employees</h1>
@@ -107,7 +123,10 @@ const ManageEmployeesPage: React.FC<ManageEmployeesPageProps> = ({ setActivePage
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                                            <button onClick={() => handleEdit(employee)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
+                                            <button onClick={() => openSalaryModal(employee)} className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200 font-medium transition-colors">
+                                                Add Salary
+                                            </button>
+                                            <button onClick={() => handleEdit(employee)} className="ml-4 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
                                                 Edit
                                             </button>
                                             <button onClick={() => openDeleteModal(employee)} className="ml-4 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 font-medium transition-colors">

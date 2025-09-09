@@ -25,3 +25,11 @@ export interface Employee {
     password?: string;
     status: Status;
 }
+
+export interface EmployeeSalary {
+    employee_id: string;
+    sal_date: string; // "YYYY-MM-DD"
+    advance: number;
+    others: number;
+    note: string;
+}
