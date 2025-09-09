@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
+import { Status } from '../../types';
 
 interface EditEmployeePageProps {
     setActivePage: (page: string) => void;
@@ -12,8 +13,9 @@ const EditEmployeePage: React.FC<EditEmployeePageProps> = ({ setActivePage }) =>
     const [email, setEmail] = useState('');
     const [mobile, setMobile] = useState('');
     const [salary, setSalary] = useState('');
-    const [monthlyAttendance, setMonthlyAttendance] = useState('');
-    const [monthlyAdvance, setMonthlyAdvance] = useState('');
+    const [password, setPassword] = useState('');
+    const [status, setStatus] = useState<Status>(Status.Active);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (editingEmployee) {
@@ -21,28 +23,34 @@ const EditEmployeePage: React.FC<EditEmployeePageProps> = ({ setActivePage }) =>
             setEmail(editingEmployee.email);
             setMobile(editingEmployee.mobile);
             setSalary(editingEmployee.salary.toString());
-            setMonthlyAttendance(editingEmployee.monthlyAttendance.toString());
-            setMonthlyAdvance(editingEmployee.monthlyAdvance.toString());
+            setStatus(editingEmployee.status);
         } else {
             setActivePage('manage-employees');
         }
     }, [editingEmployee, setActivePage]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingEmployee) return;
         
-        updateEmployee({
-            ...editingEmployee,
-            name,
-            email,
-            mobile,
-            salary: parseFloat(salary),
-            monthlyAttendance: parseInt(monthlyAttendance),
-            monthlyAdvance: parseFloat(monthlyAdvance)
-        });
-        setEditingEmployee(null);
-        setActivePage('manage-employees');
+        setIsSaving(true);
+        try {
+            await updateEmployee({
+                ...editingEmployee,
+                name,
+                email,
+                mobile,
+                salary: parseFloat(salary),
+                status,
+                password: password || undefined,
+            });
+            setEditingEmployee(null);
+            setActivePage('manage-employees');
+        } catch (error) {
+            // Error is handled in context
+        } finally {
+            setIsSaving(false);
+        }
     };
     
     const handleCancel = () => {
@@ -76,20 +84,38 @@ const EditEmployeePage: React.FC<EditEmployeePageProps> = ({ setActivePage }) =>
                     <label htmlFor="employeeSalary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Salary</label>
                     <input type="number" id="employeeSalary" value={salary} onChange={(e) => setSalary(e.target.value)} className={commonInputStyles} required />
                 </div>
-                <div>
-                    <label htmlFor="employeeAttendance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Monthly Attendance (days)</label>
-                    <input type="number" id="employeeAttendance" value={monthlyAttendance} onChange={(e) => setMonthlyAttendance(e.target.value)} className={commonInputStyles} required />
+                 <div>
+                    <label htmlFor="employeePassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                    <input 
+                        type="password" 
+                        id="employeePassword" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        className={commonInputStyles}
+                        placeholder="Leave blank to keep current password"
+                     />
                 </div>
                 <div>
-                    <label htmlFor="employeeAdvance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Monthly Advance</label>
-                    <input type="number" id="employeeAdvance" value={monthlyAdvance} onChange={(e) => setMonthlyAdvance(e.target.value)} className={commonInputStyles} required />
+                    <label htmlFor="employeeStatus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                     <select
+                        id="employeeStatus"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value as Status)}
+                        className="block w-full px-3 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                        <option value={Status.Active}>Active</option>
+                        <option value={Status.Inactive}>Inactive</option>
+                    </select>
                 </div>
                 <div className="md:col-span-2 flex items-center justify-end space-x-4 mt-4">
                     <button type="button" onClick={handleCancel} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 focus:outline-none">
                         Cancel
                     </button>
-                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Update Employee
+                    <button 
+                        type="submit" 
+                        disabled={isSaving}
+                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed">
+                        {isSaving ? 'Updating...' : 'Update Employee'}
                     </button>
                 </div>
             </form>

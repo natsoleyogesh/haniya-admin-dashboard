@@ -22,7 +22,6 @@ export interface Employee {
     email: string;
     mobile: string;
     salary: number;
-    password: string;
-    monthlyAttendance: number;
-    monthlyAdvance: number;
+    password?: string;
+    status: Status;
 }

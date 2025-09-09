@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../../contexts/DataContext';
-import { Employee } from '../../types';
+import { Employee, Status } from '../../types';
 import Pagination from '../Pagination';
 import ConfirmModal from '../ConfirmModal';
 
@@ -11,7 +11,7 @@ interface ManageEmployeesPageProps {
 const ITEMS_PER_PAGE = 5;
 
 const ManageEmployeesPage: React.FC<ManageEmployeesPageProps> = ({ setActivePage }) => {
-    const { employees, setEditingEmployee, deleteEmployee } = useData();
+    const { employees, setEditingEmployee, deleteEmployee, isLoadingEmployees } = useData();
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
@@ -31,9 +31,9 @@ const ManageEmployeesPage: React.FC<ManageEmployeesPageProps> = ({ setActivePage
         setIsModalOpen(false);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (employeeToDelete) {
-            deleteEmployee(employeeToDelete.id);
+            await deleteEmployee(employeeToDelete.id);
             if (currentEmployees.length === 1 && currentPage > 1) {
                 setCurrentPage(currentPage - 1);
             }
@@ -80,34 +80,51 @@ const ManageEmployeesPage: React.FC<ManageEmployeesPageProps> = ({ setActivePage
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Email</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Mobile</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Salary</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Net Salary</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                            {currentEmployees.map((employee, index) => (
-                                <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{indexOfFirstItem + index + 1}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">{employee.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{employee.email}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{employee.mobile}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{formatCurrency(employee.salary)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-200">{formatCurrency(employee.salary - employee.monthlyAdvance)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                                        <button onClick={() => handleEdit(employee)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
-                                            Edit
-                                        </button>
-                                        <button onClick={() => openDeleteModal(employee)} className="ml-4 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 font-medium transition-colors">
-                                            Delete
-                                        </button>
-                                    </td>
+                            {isLoadingEmployees ? (
+                                <tr>
+                                    <td colSpan={7} className="p-6 text-center text-slate-500 dark:text-slate-400">Loading employees...</td>
                                 </tr>
-                            ))}
+                            ) : currentEmployees.length > 0 ? (
+                                currentEmployees.map((employee, index) => (
+                                    <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{indexOfFirstItem + index + 1}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">{employee.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{employee.email}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{employee.mobile}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{formatCurrency(employee.salary)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                employee.status === Status.Active 
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                            }`}>
+                                                {employee.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                                            <button onClick={() => handleEdit(employee)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium transition-colors">
+                                                Edit
+                                            </button>
+                                            <button onClick={() => openDeleteModal(employee)} className="ml-4 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 font-medium transition-colors">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={7} className="p-6 text-center text-slate-500 dark:text-slate-400">No employees found.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
-                 {employees.length === 0 && <p className="p-6 text-center text-slate-500 dark:text-slate-400">No employees found.</p>}
-                 {employees.length > 0 && (
+                 {!isLoadingEmployees && employees.length > ITEMS_PER_PAGE && (
                     <Pagination
                         currentPage={currentPage}
                         totalItems={employees.length}

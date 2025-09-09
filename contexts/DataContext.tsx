@@ -8,13 +8,13 @@ interface DataContextType {
   employees: Employee[];
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
-  addEmployee: (employee: Omit<Employee, 'id'>) => void;
+  addEmployee: (employee: Omit<Employee, 'id'> & { password: string }) => Promise<void>;
   updateCategory: (category: Category) => Promise<void>;
   updateProduct: (product: Product) => Promise<void>;
-  updateEmployee: (employee: Employee) => void;
+  updateEmployee: (employee: Employee) => Promise<void>;
   deleteCategory: (categoryId: string) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
-  deleteEmployee: (employeeId: string) => void;
+  deleteEmployee: (employeeId: string) => Promise<void>;
   editingCategory: Category | null;
   setEditingCategory: (category: Category | null) => void;
   editingProduct: Product | null;
@@ -23,25 +23,22 @@ interface DataContextType {
   setEditingEmployee: (employee: Employee | null) => void;
   isLoadingCategories: boolean;
   isLoadingProducts: boolean;
+  isLoadingEmployees: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const initialEmployees: Employee[] = [
-    { id: 'e1', name: 'John Doe', email: 'john.d@example.com', mobile: '123-456-7890', salary: 50000, password: 'password123', monthlyAttendance: 28, monthlyAdvance: 5000 },
-    { id: 'e2', name: 'Jane Smith', email: 'jane.s@example.com', mobile: '098-765-4321', salary: 65000, password: 'password123', monthlyAttendance: 30, monthlyAdvance: 2000 },
-];
-
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { addToast } = useToast();
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
 
   const API_BASE_URL = 'https://haniya.natsol.in/api/admin';
   const getAuthToken = () => localStorage.getItem('authToken');
@@ -110,11 +107,47 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoadingProducts(false);
     }
   }, [addToast]);
+  
+  const fetchEmployees = useCallback(async () => {
+    setIsLoadingEmployees(true);
+    const token = getAuthToken();
+    if (!token) {
+      addToast('Authentication session expired. Please log in again.', 'error');
+      setIsLoadingEmployees(false);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/employees`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch employees. Server responded with an error.');
+      
+      const data = await response.json();
+      if (data.status === true) {
+        const mappedEmployees: Employee[] = data.data.map((emp: any) => ({
+          id: emp.id.toString(),
+          name: emp.name,
+          email: emp.email,
+          mobile: emp.mobile,
+          salary: parseFloat(emp.salary),
+          status: emp.status === 'Active' ? Status.Active : Status.Inactive,
+        }));
+        setEmployees(mappedEmployees);
+      } else {
+        throw new Error(data.message || 'An unknown error occurred while fetching employees.');
+      }
+    } catch (error: any) {
+      addToast(error.message, 'error');
+    } finally {
+      setIsLoadingEmployees(false);
+    }
+  }, [addToast]);
 
   useEffect(() => {
     fetchCategories();
     fetchProducts();
-  }, [fetchCategories, fetchProducts]);
+    fetchEmployees();
+  }, [fetchCategories, fetchProducts, fetchEmployees]);
 
 
   const addCategory = async (category: Omit<Category, 'id'>) => {
@@ -212,10 +245,31 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
-  const addEmployee = (employee: Omit<Employee, 'id'>) => {
-    const newEmployee = { ...employee, id: new Date().toISOString() };
-    setEmployees(prev => [...prev, newEmployee]);
-    addToast('Employee added successfully!', 'success');
+  const addEmployee = async (employee: Omit<Employee, 'id'> & { password: string }) => {
+    const token = getAuthToken();
+    const formData = new FormData();
+    formData.append('name', employee.name);
+    formData.append('email', employee.email);
+    formData.append('mobile', employee.mobile);
+    formData.append('salary', employee.salary.toString());
+    formData.append('password', employee.password);
+    formData.append('status', employee.status);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/employees`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData,
+        });
+        const data = await response.json();
+        if (data.status !== true) throw new Error(data.message || 'Failed to add employee');
+        
+        addToast('Employee added successfully!', 'success');
+        await fetchEmployees();
+    } catch (error: any) {
+        addToast(error.message, 'error');
+        throw error;
+    }
   };
 
   const updateProduct = async (updatedProduct: Product) => {
@@ -243,9 +297,34 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const updateEmployee = (updatedEmployee: Employee) => {
-    setEmployees(prev => prev.map(emp => (emp.id === updatedEmployee.id ? updatedEmployee : emp)));
-    addToast('Employee updated successfully!', 'success');
+  const updateEmployee = async (updatedEmployee: Employee) => {
+    const token = getAuthToken();
+    const formData = new FormData();
+    formData.append('name', updatedEmployee.name);
+    formData.append('email', updatedEmployee.email);
+    formData.append('mobile', updatedEmployee.mobile);
+    formData.append('salary', updatedEmployee.salary.toString());
+    formData.append('status', updatedEmployee.status);
+    if (updatedEmployee.password) {
+        formData.append('password', updatedEmployee.password);
+    }
+    formData.append('_method', 'PATCH');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/employees/${updatedEmployee.id}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData,
+        });
+        const data = await response.json();
+        if (data.status !== true) throw new Error(data.message || 'Failed to update employee');
+        
+        addToast('Employee updated successfully!', 'success');
+        await fetchEmployees();
+    } catch (error: any) {
+        addToast(error.message, 'error');
+        throw error;
+    }
   };
 
   const deleteProduct = async (productId: string) => {
@@ -266,9 +345,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
-  const deleteEmployee = (employeeId: string) => {
-    setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
-    addToast('Employee deleted successfully!', 'success');
+  const deleteEmployee = async (employeeId: string) => {
+    const token = getAuthToken();
+    try {
+        const response = await fetch(`${API_BASE_URL}/employees/${employeeId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.status !== true) throw new Error(data.message || 'Failed to delete employee');
+
+        addToast('Employee deleted successfully!', 'success');
+        await fetchEmployees();
+    } catch (error: any) {
+        addToast(error.message, 'error');
+        throw error;
+    }
   };
 
   return (
@@ -293,6 +385,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setEditingEmployee,
         isLoadingCategories,
         isLoadingProducts,
+        isLoadingEmployees,
     }}>
       {children}
     </DataContext.Provider>
