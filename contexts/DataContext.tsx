@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 import { Category, Product, Status, Employee, EmployeeSalary, EmployeeSalaryRecord } from '../types';
 import { useToast } from './ToastContext';
+import { useAuth } from './AuthContext';
 
 interface DataContextType {
   categories: Category[];
@@ -35,6 +36,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -181,10 +183,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   useEffect(() => {
-    fetchCategories();
-    fetchProducts();
-    fetchEmployees();
-  }, [fetchCategories, fetchProducts, fetchEmployees]);
+    if (isAuthenticated) {
+      fetchCategories();
+      fetchProducts();
+      fetchEmployees();
+    } else {
+      // Clear data on logout
+      setCategories([]);
+      setProducts([]);
+      setEmployees([]);
+      setEmployeeSalaries([]);
+    }
+  }, [isAuthenticated, fetchCategories, fetchProducts, fetchEmployees]);
 
 
   const addCategory = async (category: Omit<Category, 'id'>) => {
